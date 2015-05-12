@@ -26,7 +26,6 @@ def parse_tweet_uri(uri)
   uri_elements = uri.path.split("/")
   user_screen_name = uri_elements[1]
   tweet_id = uri_elements.last
-  puts user_screen_name, tweet_id
 
   return user_screen_name, tweet_id
 end
@@ -50,6 +49,24 @@ def urban_define(word)
   return definition
 end
 
+# Format the tweet such that it returns two strings lower than 140 chars
+# but with awareness of words
+def format_tweet(tweet_text, reply_to_user)
+  words = tweet_text.split(" ")
+  reply_tweet = ""
+  reply_tweet2 = "@#{reply_to_user}... "
+
+  for word in words
+    if (reply_tweet + word).size > 136
+      reply_tweet2 += "#{word} "
+    else
+      reply_tweet += "#{word} "
+    end
+  end
+
+  return reply_tweet, reply_tweet2
+end
+
 # Process the tweet object retrieving necessary information
 # who to reply to
 # which tweet id to reply to
@@ -58,19 +75,31 @@ end
 # reply to tweet
 def process(tweet)
   reply_to_user, reply_to_tweet = parse_tweet_uri(tweet.uri)
+
   # Defence against infinite loop
   if reply_to_user == "urban_bot"
     return
   end
+
   has_define = check_tweet(tweet.text)
-  puts has_define
   if has_define
     word = get_word_to_define(tweet.text)
     definition = urban_define(word)
     reply_tweet_text = "@#{reply_to_user}, #{word} means #{definition}"
-    if reply_tweet_text.size > 140
 
+    # If the definition is longer than 2 tweets say can't do for now
+    if reply_tweet_text.size > 276
+      reply_tweet_text = "@#{reply_to_user}, #{word} has a long definition which I can't read at the moment"
     end
+
+    # Split to 2 tweets if char limit exceeds
+    if reply_tweet_text.size > 140
+      tweet1, tweet2 = format_tweet(reply_tweet_text, reply_to_user)
+      $rest_client.update(tweet1, in_reply_to_status_id: reply_to_tweet)
+      $rest_client.update(tweet2, in_reply_to_status_id: reply_to_tweet)
+      return
+    end
+
     $rest_client.update(reply_tweet_text, in_reply_to_status_id: reply_to_tweet)
   else
     reply_tweet_text = "@#{reply_to_user}, I'm just a bot doing bot things. Try '@urban_bot define trollface'"
