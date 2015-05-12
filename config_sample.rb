@@ -1,4 +1,4 @@
-module Config
+module Settings
     @CONSUMER_KEY = ""
     @CONSUMER_SECRET = ""
     @ACCESS_TOKEN = ""
