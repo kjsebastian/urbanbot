@@ -33,9 +33,9 @@ def check_tweet(text)
   return text.include? "define"
 end
 
-#TODO
+# Return which word to define
 def get_word_to_define(text)
-  return
+  return text[/define \w+/].split(" ").last
 end
 
 #TODO
