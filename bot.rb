@@ -1,4 +1,6 @@
 require "twitter"
+require "net/http"
+require "json"
 # Modify config_sample.rb with proper variables
 require "./config.rb"
 
@@ -38,9 +40,14 @@ def get_word_to_define(text)
   return text[/define \w+/].split(" ").last
 end
 
-#TODO
+# Get the definition from Urban Dictionary API
 def urban_define(word)
-  return
+  api_url = "http://api.urbandictionary.com/v0/define?term=#{word}"
+  res = Net::HTTP.get_response(URI.parse(api_url))
+  json_res = JSON.parse(res)
+  definition = json_res["list"].first["definition"]
+  definition = definition.split(".").first # Get the first sentence of definition
+  return definition
 end
 
 # Process the tweet object retrieving necessary information
