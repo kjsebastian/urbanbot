@@ -58,6 +58,10 @@ end
 # reply to tweet
 def process(tweet)
   reply_to_user, reply_to_tweet = parse_tweet_uri(tweet.uri)
+  # Defence against infinite loop
+  if reply_to_user == "urban_bot"
+    return
+  end
   has_define = check_tweet(tweet.text)
   puts has_define
   if has_define
