@@ -14,7 +14,7 @@ client = Twitter::Streaming::Client.new do |config|
 end
 
 # Rest client to update status using rest api
-rest_client = Twitter::REST::Client.new do |config|
+$rest_client = Twitter::REST::Client.new do |config|
   config.consumer_key        = Settings.CONSUMER_KEY
   config.consumer_secret     = Settings.CONSUMER_SECRET
   config.access_token        = Settings.ACCESS_TOKEN
@@ -44,7 +44,7 @@ end
 def urban_define(word)
   api_url = "http://api.urbandictionary.com/v0/define?term=#{word}"
   res = Net::HTTP.get_response(URI.parse(api_url))
-  json_res = JSON.parse(res)
+  json_res = JSON.parse(res.body)
   definition = json_res["list"].first["definition"]
   definition = definition.split(".").first # Get the first sentence of definition
   return definition
@@ -59,14 +59,18 @@ end
 def process(tweet)
   reply_to_user, reply_to_tweet = parse_tweet_uri(tweet.uri)
   has_define = check_tweet(tweet.text)
+  puts has_define
   if has_define
     word = get_word_to_define(tweet.text)
     definition = urban_define(word)
     reply_tweet_text = "@#{reply_to_user}, #{word} means #{definition}"
-    rest_client.update(reply_tweet_text, in_reply_to_status_id: reply_to_tweet)
+    if reply_tweet_text.size > 140
+
+    end
+    $rest_client.update(reply_tweet_text, in_reply_to_status_id: reply_to_tweet)
   else
     reply_tweet_text = "@#{reply_to_user}, I'm just a bot doing bot things. Try '@urban_bot define trollface'"
-    rest_client.update(reply_tweet_text, in_reply_to_status_id: reply_to_tweet)
+    $rest_client.update(reply_tweet_text, in_reply_to_status_id: reply_to_tweet)
   end
 end
 
